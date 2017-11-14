@@ -148,4 +148,8 @@ int main () {
     diameter = get_correct_diameter(diameter, actual_position, obstacle_vector, area);
     std::cout << "Diameter = " << diameter << "\n";
   }
+  
+  //Round diameter to 4 decimals
+  diameter = round(diameter * 10000) / 10000;
+  std::cout << "Maximum size in test case " << test_number << " is " << diameter << ".\n";
 }
