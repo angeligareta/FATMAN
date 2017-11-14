@@ -78,6 +78,48 @@ Area select_area(Position& actual_position, double& diameter)
   return area;
 }
 
+Position get_last_obstacle(const Position& actual_position, const std::vector<Position>& obstacle_vector, const Area& area)
+{
+  Position last_obstacle_position = Position(-1, -1);
+  double nearest_obstacle_distance = MAX_INT;
+  
+  for (int i = 0; i < obstacle_vector.size(); ++i) {
+    // Check if the obstacle is before the actual x and in the area
+      // 1º Check if obstacle.x is lower than actual_position.x
+    if (obstacle_vector[i].first >= actual_position.first) { continue; } // TODO: IF it's equal? do another thing...
+      // 2º Check if obstacle.y is higher than area.min and lower than area.max
+    if ( (obstacle_vector[i].second <= area.first) || (obstacle_vector[i].second >= area.second) ) { continue; }
+    
+    // Return nearest obstacle in the area
+    if ( nearest_obstacle_distance > get_distance_between(actual_position, obstacle_vector[i]) ) {
+      last_obstacle_position = obstacle_vector[i]; // Return nearest obstacle in the area
+      nearest_obstacle_distance = get_distance_between(actual_position, obstacle_vector[i]);
+    } 
+  }
+  
+  return last_obstacle_position;
+}
+
+double get_correct_diameter(const double& diameter, const Position& actual_position, const std::vector<Position>& obstacle_vector, const Area& area)
+{
+  double correct_diameter = diameter;
+  Position last_obstacle_position = get_last_obstacle(actual_position, obstacle_vector, area);
+  // std::cout << "Last Obstacle (" << last_obstacle_position.first << " , " << last_obstacle_position.second << ")\n"; // (1,3)
+  
+  // Check if there is one before which distance is lower than the diameter
+  while (last_obstacle_position != Position(-1, -1)) {
+    
+    double distance_to_obstacle = get_distance_between(actual_position, last_obstacle_position);
+    
+    if ( distance_to_obstacle < diameter) { // We adjust
+      correct_diameter = distance_to_obstacle;
+    }
+    last_obstacle_position = Position(-1, -1); // There would be no one else
+  }
+  
+  return correct_diameter;
+}
+
 int main () {
   int test_number = 1; // TEMP
   std::vector<Position> obstacle_vector;
@@ -102,5 +144,8 @@ int main () {
     
     area = select_area(actual_position, diameter); // UP or DOWN
     std::cout << "Area (" << area.first << " , " << area.second << ")\n";
+    
+    diameter = get_correct_diameter(diameter, actual_position, obstacle_vector, area);
+    std::cout << "Diameter = " << diameter << "\n";
   }
 }
