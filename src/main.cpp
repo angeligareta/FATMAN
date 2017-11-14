@@ -59,6 +59,25 @@ Position get_next_obstacle(const Position& actual_position, const std::vector<Po
   return next_obstacle_position;
 }
 
+// En caso de haber dos obstáculos en línea se gestiona aqui
+Area select_area(Position& actual_position, double& diameter)
+{
+  double distance_from_top = aisle_width - actual_position.second;
+  double distance_from_bottom = actual_position.second;
+  Area area;
+  
+  if (distance_from_top > distance_from_bottom) {
+    if ( diameter > distance_from_top) { diameter = distance_from_top; } // IF FIRST
+    area = Area(actual_position.second, actual_position.second + diameter);
+  } 
+  else {
+    if ( diameter > distance_from_bottom) { diameter = distance_from_bottom; } // IF FIRST
+    area = Area(actual_position.second - diameter, actual_position.second);
+  }
+  
+  return area;
+}
+
 int main () {
   int test_number = 1; // TEMP
   std::vector<Position> obstacle_vector;
@@ -80,5 +99,8 @@ int main () {
     actual_position = get_next_obstacle(actual_position, obstacle_vector, area);
     if (actual_position == Position(-1,-1)) { break; }
     std::cout << "Obstacle (" << actual_position.first << " , " << actual_position.second << ")\n";
+    
+    area = select_area(actual_position, diameter); // UP or DOWN
+    std::cout << "Area (" << area.first << " , " << area.second << ")\n";
   }
 }
