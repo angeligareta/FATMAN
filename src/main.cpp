@@ -1,17 +1,60 @@
 #include <iostream>
-#include <cstdlib> //abs
+
 #include <vector>
+#include <set>
+
+#include <cstdlib> //abs
 #include <cmath> //sqrt
-#include <algorithm>
+#include <algorithm> //count
 
 using Position = std::pair<int,int>;
 using Area = std::pair<double,double>;
+class Way;
 
 const int MAX_INT = 101*101; // Used for distance
 int aisle_length; // Initialized in read_data
 int aisle_width; // Initialized in read_data
 
-void read_data (std::vector<Position> &obstacle_vector) 
+std::vector<Position> obstacle_vector;
+std::set<Way> possible_way_set; // Ways that can have the max diameter
+std::set<Way> finished_way_set; // Ways that have finished
+
+class Way {
+  
+  private:
+    Position actual_position_;
+    double diameter_;
+    Area area_;
+    
+  public:
+    Way(const Position& actual_position, double diameter, Area area):
+    actual_position_(actual_position),
+    diameter_(diameter),
+    area_(area)
+    {}
+    
+    Way(const Way& way)
+    {
+      *this = way;
+    }
+    
+    Way& operator= (const Way& way)
+    {
+      actual_position_ = way.actual_position_;
+      diameter_ = way.diameter_;
+      area_ = way.area_;
+      
+      return *this;
+    }
+    
+    // Order the set by distance
+    friend bool operator< (const Way& way_1, const Way& way_2)
+    {
+      return way_1.diameter_ < way_2.diameter_;
+    }
+};
+
+void read_data () 
 {
   // TEMP
   aisle_length = 8; aisle_width = 5;
@@ -37,7 +80,7 @@ double get_distance_between(const Position& position_1, const Position& position
   return sqrt(x_distance_to_obstacle*x_distance_to_obstacle + y_distance_to_obstacle*y_distance_to_obstacle);
 }
 
-Position get_next_obstacle(const Position& actual_position, const std::vector<Position>& obstacle_vector, const Area& area)
+Position get_next_obstacle(const Position& actual_position, const Area& area)
 {
   Position next_obstacle_position = Position(-1, -1);
   double nearest_obstacle_distance = MAX_INT;
@@ -78,7 +121,7 @@ Area select_area(Position& actual_position, double& diameter)
   return area;
 }
 
-Position get_last_obstacle(const Position& actual_position, const std::vector<Position>& obstacle_vector, const Area& area)
+Position get_last_obstacle(const Position& actual_position, const Area& area)
 {
   Position last_obstacle_position = Position(-1, -1);
   double nearest_obstacle_distance = MAX_INT;
@@ -100,10 +143,10 @@ Position get_last_obstacle(const Position& actual_position, const std::vector<Po
   return last_obstacle_position;
 }
 
-double get_correct_diameter(const double& diameter, const Position& actual_position, const std::vector<Position>& obstacle_vector, const Area& area)
+double get_correct_diameter(const double& diameter, const Position& actual_position, const Area& area)
 {
   double correct_diameter = diameter;
-  Position last_obstacle_position = get_last_obstacle(actual_position, obstacle_vector, area);
+  Position last_obstacle_position = get_last_obstacle(actual_position, area);
   // std::cout << "Last Obstacle (" << last_obstacle_position.first << " , " << last_obstacle_position.second << ")\n"; // (1,3)
   
   // Check if there is one before which distance is lower than the diameter
@@ -122,12 +165,10 @@ double get_correct_diameter(const double& diameter, const Position& actual_posit
 
 int main () {
   int test_number = 1; // TEMP
-  std::vector<Position> obstacle_vector;
-  read_data(obstacle_vector);
-  
-  double diameter = aisle_width;
+  read_data();
   
   Position actual_position (0, aisle_width / 2);
+  double diameter = aisle_width;
   Area area (0, diameter); // The area is min and max y
   
   system("clear");
@@ -138,14 +179,14 @@ int main () {
   
   while (actual_position != Position(-1,-1)) {
     
-    actual_position = get_next_obstacle(actual_position, obstacle_vector, area);
+    actual_position = get_next_obstacle(actual_position, area);
     if (actual_position == Position(-1,-1)) { break; }
     std::cout << "Obstacle (" << actual_position.first << " , " << actual_position.second << ")\n";
     
     area = select_area(actual_position, diameter); // UP or DOWN
     std::cout << "Area (" << area.first << " , " << area.second << ")\n";
     
-    diameter = get_correct_diameter(diameter, actual_position, obstacle_vector, area);
+    diameter = get_correct_diameter(diameter, actual_position, area);
     std::cout << "Diameter = " << diameter << "\n";
   }
   
