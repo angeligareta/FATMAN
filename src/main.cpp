@@ -22,8 +22,6 @@ std::vector<Position> obstacle_vector;
 std::set<Way> possible_way_set; // Ways that can have the max diameter
 std::set<Way> finished_way_set; // Ways that have finished
 
-bool debug = true;
-
 class Way {
   
   private:
@@ -63,7 +61,6 @@ class Way {
     void get_next_ways () // Hace todo el proceso hasta que seleccione área y divida los casos, introduciendolos en possible_way
     {
       actual_position_ = get_next_obstacle(area_);
-      if (debug) std::cout << "\nObstacle (" << actual_position_.first << " , " << actual_position_.second << ")\n";
       
       // If way has finished
       if (actual_position_ == Position(-1,-1)) { finished_way_set.insert(*this); }
@@ -134,7 +131,6 @@ class Way {
     {
       double correct_diameter = diameter;
       Position last_obstacle_position = get_last_obstacle(area);
-      // std::cout << "Last Obstacle (" << last_obstacle_position.first << " , " << last_obstacle_position.second << ")\n"; // (1,3)
       
       // Check if there is one before which distance is lower than the diameter
       while (last_obstacle_position != Position(-1, -1)) {
@@ -163,34 +159,6 @@ class Way {
         Way way_2 = create_way(actual_position_, 0, actual_position_.second);
         possible_way_set.insert(way_2);
       }
-      /* double distance_from_top = aisle_width - actual_position_.second;
-      // double distance_from_bottom = actual_position_.second;
-      
-      // // Divide cases
-      // double diameter_1 = diameter_;
-      // double diameter_2 = diameter_;
-      
-      // if ( diameter_1 > distance_from_top) { diameter_1 = distance_from_top; } // If excedes limit
-      // if ( diameter_2 > distance_from_bottom) { diameter_2 = distance_from_bottom; } // If excedes limit
-      
-      // Area area_1 = Area(actual_position_.second, actual_position_.second + diameter_1);
-      // if (debug) std::cout << "Area1 (" << area_1.first << " , " << area_1.second << ")\n";
-      // Area area_2 = Area(actual_position_.second - diameter_2, actual_position_.second);
-      // if (debug) std::cout << "Area2 (" << area_2.first << " , " << area_2.second << ")\n";
-      
-      // // Adjust diameter
-      
-      // diameter_1 = get_correct_diameter(diameter_1, area_1);
-      // if (debug) std::cout << "Diameter1 = " << diameter_1 << "\n";
-      // diameter_2 = get_correct_diameter(diameter_2, area_2);
-      // if (debug) std::cout << "Diameter2 = " << diameter_2 << "\n";
-      
-      // Way way_1 (actual_position_, diameter_1, area_1);
-      // Way way_2 (actual_position_, diameter_2, area_2);
-      
-      // possible_way_set.insert(way_1);
-      // possible_way_set.insert(way_2);
-      */
     }
     
     bool check_obstacle_in_line(Position actual_position, double bottom, double top)
@@ -270,10 +238,8 @@ class Way {
       if ( diameter > top - bottom) { diameter = top - bottom; } // If excedes current area width
       
       Area area = Area(bottom, top);
-      if (debug) std::cout << "Area (" << area.first << " , " << area.second << ")\n";
       
       diameter = get_correct_diameter(diameter, area);
-      if (debug) std::cout << "Diameter = " << diameter << "\n";
       
       return Way (actual_position, diameter, area);
     }
@@ -298,14 +264,10 @@ void read_data ()
   
   read_position(line, aisle_length, aisle_width);
   
-  if (debug) std::cout << "aisle_length = " << aisle_length << std::endl;
-  if (debug) std::cout << "aisle_width = " << aisle_width << std::endl;
-  
   if ( (aisle_length < 0) || (aisle_length > 100) ) { throw; }
   if ( (aisle_width < 0) || (aisle_width > 100) ) { throw; }
   
   int obstacle_number = 0; std::cin >> obstacle_number; std::cin.ignore();
-  if (debug) std::cout << "obstacle_number = " << obstacle_number << std::endl;
   
   if ( (obstacle_number < 0) || (obstacle_number > 100) ) { throw; }
   
@@ -314,9 +276,6 @@ void read_data ()
     
     int x, y;
     read_position(line, x, y);
-    
-    if (debug) std::cout << "x = " << x << std::endl;
-    if (debug) std::cout << "y = " << y << std::endl;
     
     if ( (x < 0) || (x > aisle_length) ) { throw; }
     if ( (y < 0) || (y > aisle_width) ) { throw; }
@@ -338,13 +297,6 @@ int main () {
     Position actual_position (0, aisle_width / 2);
     double diameter = aisle_width;
     Area area (0, diameter); // The area is min and max y
-    
-    if (debug) system("clear");
-    
-    if (debug) std::cout << "\n\nSTART\n\n";
-    if (debug) std::cout << "First Obstacle (" << actual_position.first << " , " << actual_position.second << ")\n";
-    if (debug) std::cout << "First Area (" << area.first << " , " << area.second << ")\n";
-    if (debug) std::cout << "First Diameter = " << diameter << "\n\n";
   
     possible_way_set.insert(Way(actual_position, diameter, area));
     
