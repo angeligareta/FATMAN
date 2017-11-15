@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Fatman: Related Pages</title>
+<title>Fatman: README</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -70,7 +70,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
   </div>
 </div>
 <script type="text/javascript">
-$(document).ready(function(){initNavTree('pages.html','');});
+$(document).ready(function(){initNavTree('md_src_README.html','');});
 </script>
 <div id="doc-content">
 <!-- window showing the filter options -->
@@ -89,15 +89,19 @@ $(document).ready(function(){initNavTree('pages.html','');});
 
 <div class="header">
   <div class="headertitle">
-<div class="title">Related Pages</div>  </div>
+<div class="title">README </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock">Here is a list of all related documentation pages:</div><div class="directory">
-<table class="directory">
-<tr id="row_0_" class="even"><td class="entry"><span style="width:16px;display:inline-block;">&#160;</span><a class="el" href="md_src_README.html" target="_self">README</a></td><td class="desc"></td></tr>
-</table>
-</div><!-- directory -->
-</div><!-- contents -->
+<div class="textblock"><p>#include &lt;iostream&gt; #include &lt;vector&gt; #include &lt;set&gt;</p>
+<p>#include &lt;iomanip&gt; // setprecision #include &lt;sstream&gt; // io #include &lt;iterator&gt; // io #include &lt;string&gt; // io</p>
+<p>#include &lt;cstdlib&gt; //abs #include &lt;cmath&gt; //sqrt #include &lt;algorithm&gt; //count</p>
+<p>using Position = std::pair&lt;int,int&gt;; /**&lt; Pair of int used to store the x and y of a position. */ using Area = std::pair&lt;double,double&gt;; /**&lt; Pair of double used to store the bottom and top of the area in a way. */ class <a class="el" href="classWay.html" title="Represent a way in the test. Each time that we see an obstacle, instead of going to the bigger side...">Way</a>;</p>
+<p>const int MAX_INT = 101*101; /**&lt; Variable used to calculate distance. */ int aisle_length; /**&lt; Length of the aisle in a test. */ int aisle_width; /**&lt; Width of the aisle in a test. */</p>
+<p>std::vector&lt;Position&gt; obstacle_vector; /**&lt; Vector of obstacles in a test.*/ std::set&lt;Way&gt; possible_way_set; /**&lt; Ways that can have the max diameter in a test. */ std::set&lt;Way&gt; finished_way_set; /**&lt; Ways that have finished in a test. */</p>
+<p>/**</p><ul>
+<li></li>
+</ul>
+</div></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->

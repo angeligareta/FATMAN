@@ -26,17 +26,15 @@ std::set<Way> finished_way_set; /**< Ways that have finished in a test. */
 /**
  * @file main.cpp
  * @brief Program to solve the fatman problem of UVA.
- * @author Ángel Luis Igareta Herráiz
+ * @author Ángel Luis Igareta Herráiz.
  */
 
 /**
  * @class Way
  * @brief Represent a way in the test.
- * 
  * Each time that we see an obstacle, instead of going to the bigger side, we store both ways. 
  * Doing that if we discover that the way we went was not the best one 
  * (comparing it to all the possible ways) we can simply go back and check another way.
- * 
  * Each way has a position, diameter and area, to allow us to keep moving from it.
  */
 class Way {
@@ -50,7 +48,6 @@ class Way {
   public:
 /**
   * Constructor of a way with the neccesary parameters to continue looking for the best path.
-  *
   * @param[in] actual_position Actual position of the way (the obstacle where it is).
   * @param[in] diameter Diameter of the fat person if we use this way.
   * @param[in] area Area that we are analyzing in that way. There will be a way for any different area.
@@ -64,7 +61,6 @@ class Way {
 
 /**
   * Copy constructor where we use the '=' overload. Used by set.
-  *
   * @param[in] way Way we want to copy.
   */ 
   Way(const Way& way)
@@ -74,7 +70,6 @@ class Way {
 
 /**
   * Overload of the operator '='.
-  *
   * @param[in] way Way we want to copy.
   */ 
   Way& operator= (const Way& way)
@@ -88,7 +83,6 @@ class Way {
   
 /**
   * Used to compare two ways.
-  *
   * @param[in] way_1 First way.
   * @param[in] way_2 Second way.
   */
@@ -117,7 +111,6 @@ class Way {
 
 /**
   * Diameter getter.
-  *
   * @return diameter_ Diameter of the fat person if we use this way.
   */
   double get_diameter () const
@@ -129,10 +122,8 @@ class Way {
   
 /**
   * Returns the distance between two position of our way using the euclidian algorithm.
-  *
   * @param[in] position_1 First position.
   * @param[in] position_2 Second position.
-  * 
   * @return Euclidian distance.
   */
   double get_distance_between(const Position& position_1, const Position& position_2) const
@@ -149,9 +140,7 @@ class Way {
   *   - Second check if the obstacle is in the area. If obstacle.y is higher than area.min and lower than area.max.
   *   - Third calculate nearest obstacle in the area.
   * Finally return it.
-  * 
   * @param[in] area Pair of the top and bottom where we want to search the obstacle.
-  * 
   * @return next_obstacle_position Next obstacle position.
   */
   Position get_next_obstacle(const Area& area) const
@@ -179,9 +168,7 @@ class Way {
   *   - Second check if the obstacle is in the area. If obstacle.y is higher than area.min and lower than area.max
   *   - Third calculate nearest obstacle in the area
   * Finally return it.
-  * 
   * @param[in] area Pair of the top and bottom where we want to search the obstacle.
-  * 
   * @return last_obstacle_position Last obstacle position.
   */
   Position get_last_obstacle(const Area& area) const
@@ -205,10 +192,8 @@ class Way {
 /**
   * Reduce the current diameter if it is higuer than the distance to an obstacle at the back. 
   * Because we have to pass through the obstacles.
-  *
   * @param[in] diameter Diameter of the fat person if we use this way.
   * @param[in] area Area that we are analyzing in that way.
-  * 
   * @return correct_diameter Diameter adjusted if neccesary.
   */
   double get_correct_diameter(const double& diameter, const Area& area) const
@@ -233,11 +218,9 @@ class Way {
 /**
   * Method that creates a way with the actual_position, bottom and top and 
   * adjusting the diameter if it's above the limits and calling get_correct_diameter().
-  *
   * @param[in] actual_position Actual position of the way (the obstacle where it is).
   * @param[in] bottom Bottom limit for searching the obstacle.
   * @param[in] top Top limit for searching the obstacle.
-  * 
   * @return Way The created way.
   */  
   Way create_way (const Position& actual_position, const double& bottom, const double& top) const
@@ -273,11 +256,9 @@ class Way {
   *   - Second it get's the nearest obstacle that is in line, marked and in the area.
   *   - If there have been obstacles we look if it's above our position or under it and call divide_ways_with_obstacle(). This is neccesary
   *     because the algorithm is recursive.
-  *
   * @param[in] actual_position Actual position of the way (the obstacle where it is).
   * @param[in] bottom Bottom limit for searching the obstacle.
   * @param[in] top Top limit for searching the obstacle.
-  * 
   * @return obstacles_in_line Bool that indicates if the method found obstacles between botom and top of that line.
   */  
   bool check_obstacle_in_line(const Position& actual_position, const double& bottom, const double& top)
@@ -319,11 +300,9 @@ class Way {
   *     one area it means that the height of the actual_positiion is between botom and top (Without touching). If it touchs it mean
   *     that there is only one area.
   *   - Finally we create the ways for the areas found.
-  *
   * @param[in] actual_position Actual position of the way (the obstacle where it is).
   * @param[in] bottom Bottom limit for searching the obstacle.
   * @param[in] top Top limit for searching the obstacle.
-  * 
   * @return variableA Description.
   */  
   void divide_ways_with_obstacle (const Position& actual_position, const double& bottom, const double& top)
