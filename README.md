@@ -1,13 +1,9 @@
-# Plantilla para la práctica BONO de LPP
-
 ## Nombre y número del problema a Resolver: 
-   * Nombre del problema 
-   * Número del problema 
+   * Fatman - Problem number 295.
+   * Link: [a link](https://uva.onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&page=show_problem&category=4&problem=231&mosmsg=Submission+received+with+ID+20346844)
 
-## Miembros del Equipo:
-   * Nombre Apellido (aluXXXXXXX@ull.edu.es) **Coordinador**
-   * Nombre Apellido (aluXXXXXXX@ull.edu.es)
-   * Nombre Apellido (aluXXXXXXX@ull.edu.es)
+## Miembro del Equipo:
+   * Ángel Igareta (alu0100967111@ull.edu.es) **Coordinator**
 
 La estructura de directorios de la que se parte es la siguiente:
 
