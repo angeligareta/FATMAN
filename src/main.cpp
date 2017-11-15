@@ -2,6 +2,8 @@
 #include <sstream>
 #include <iterator>
 
+#include <iomanip> // setprecision
+
 #include <vector>
 #include <set>
 #include <string>
@@ -194,18 +196,18 @@ class Way {
         if (actual_position.second <= nearest_obstacle.second) {// Si ésta por arriba
           divide_ways_with_obstacle(nearest_obstacle, nearest_obstacle.second, top);
           
-          if (!check_obstacle_in_line(actual_position, bottom, nearest_obstacle.second)) { // Miro por abajo también
-              Way way_1 = create_way(actual_position, bottom, nearest_obstacle.second);
-              possible_way_set.insert(way_1);
-          }
+          // if (!check_obstacle_in_line(actual_position, bottom, nearest_obstacle.second)) { // Miro por abajo también
+          //     Way way_1 = create_way(actual_position, bottom, nearest_obstacle.second);
+          //     possible_way_set.insert(way_1);
+          // }
         }
         else { // Si ésta por abajo
           divide_ways_with_obstacle(nearest_obstacle, bottom, nearest_obstacle.second);
           
-          if (!check_obstacle_in_line(actual_position, nearest_obstacle.second, top)) { // Miro por arriba también
-            Way way_2 = create_way(actual_position, nearest_obstacle.second, top);
-            possible_way_set.insert(way_2);
-          }
+          // if (!check_obstacle_in_line(actual_position, nearest_obstacle.second, top)) { // Miro por arriba también
+          //   Way way_2 = create_way(actual_position, nearest_obstacle.second, top);
+          //   possible_way_set.insert(way_2);
+          // }
         }
       }
       
@@ -250,8 +252,9 @@ void read_position(const std::string& line, int& x, int& y)
 {
   std::istringstream buffer(line);
   std::istream_iterator<std::string> begin(buffer), end;
-
   std::vector<std::string> string_array(begin, end); // done!
+  
+  if (string_array.size() != 2) { throw std::runtime_error(""); }
   
   x = stoi(string_array[0]);
   y = stoi(string_array[1]);
@@ -262,23 +265,33 @@ void read_data ()
   std::string line;
   std::getline(std::cin,line);
   
-  read_position(line, aisle_length, aisle_width);
+  try {
+    read_position(line, aisle_length, aisle_width);
+  }
+  catch (...) {
+    throw;
+  }
   
-  if ( (aisle_length < 0) || (aisle_length > 100) ) { throw; }
-  if ( (aisle_width < 0) || (aisle_width > 100) ) { throw; }
+  if ( (aisle_length < 0) || (aisle_length > 100) ) { throw std::runtime_error(""); }
+  if ( (aisle_width < 0) || (aisle_width > 100) ) { throw std::runtime_error(""); }
   
   int obstacle_number = 0; std::cin >> obstacle_number; std::cin.ignore();
   
-  if ( (obstacle_number < 0) || (obstacle_number > 100) ) { throw; }
+  if ( (obstacle_number < 0) || (obstacle_number > 100) ) { throw std::runtime_error(""); }
   
   for (int i = 0; i < obstacle_number; i++) {
     std::getline(std::cin,line);
     
     int x, y;
-    read_position(line, x, y);
+    try {
+      read_position(line, x, y);
+    }
+    catch (...) {
+      throw;
+    }
     
-    if ( (x < 0) || (x > aisle_length) ) { throw; }
-    if ( (y < 0) || (y > aisle_width) ) { throw; }
+    if ( (x < 0) || (x > aisle_length) ) { throw std::runtime_error(""); }
+    if ( (y < 0) || (y > aisle_width) ) { throw std::runtime_error(""); }
     
     obstacle_vector.push_back(Position(x, y));
   }
@@ -286,13 +299,19 @@ void read_data ()
 
 int main () {
   int test_number; std::cin >> test_number; std::cin.ignore();
+  if ( (test_number < 0) || (test_number > 100) ) { return 0; }
   
   for (int i = 1; i <= test_number; i++) {
     obstacle_vector.clear();
     possible_way_set.clear(); // Ways that can have the max diameter
     finished_way_set.clear(); // Ways that have finished
     
-    read_data();
+    try {
+      read_data();
+    }
+    catch (...) {
+      return 0;
+    }
     
     Position actual_position (0, aisle_width / 2);
     double diameter = aisle_width;
@@ -321,6 +340,6 @@ int main () {
     
     //Round diameter to 4 decimals
     diameter = round(diameter * 10000) / 10000;
-    std::cout << "Maximum size in test case " << i << " is " << diameter << ".\n";
+    std::cout << "Maximum size in test case " << i << " is " << std::setprecision(4) << std::fixed << diameter << ".\n";
   }
 }
