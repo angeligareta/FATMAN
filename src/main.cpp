@@ -152,11 +152,17 @@ class Way {
     
     void divide_ways ()
     {
-      if ( check_obstacle_in_line(actual_position_, 0, aisle_width) ) { return; }
+      // Miramos si por arriba hay obstáculos
+      if (!check_obstacle_in_line(actual_position_, actual_position_.second, aisle_width)) {
+        Way way_1 = create_way(actual_position_, actual_position_.second, aisle_width);
+        possible_way_set.insert(way_1);
+      }
       
-      create_way(actual_position_, actual_position_.second, aisle_width);
-      create_way(actual_position_, 0, actual_position_.second);
-      
+      // Miramos si por abajo hay obstáculos
+      if (!check_obstacle_in_line(actual_position_, 0, actual_position_.second)) {
+        Way way_2 = create_way(actual_position_, 0, actual_position_.second);
+        possible_way_set.insert(way_2);
+      }
       /* double distance_from_top = aisle_width - actual_position_.second;
       // double distance_from_bottom = actual_position_.second;
       
@@ -196,6 +202,7 @@ class Way {
       Position nearest_obstacle;
       int nearest_obstacle_distance = MAX_INT;
       
+      // Get nearest_obstacle
       for (int i = 0; i < obstacle_vector.size(); ++i) {
         if ( (obstacle_vector[i] == actual_position) || (obstacle_vector[i].first != actual_position.first) ) { // Si no están en línea
           continue;
@@ -203,11 +210,11 @@ class Way {
         if (std::count (checked_obstacles.begin(), checked_obstacles.end(), obstacle_vector[i]) != 0) { // Si ya lo hemos marcado
           continue;
         }
-        if (obstacle_vector[i].second > top && obstacle_vector[i].second < bottom) { // Si no está entre los límites (siempre buscar al mismo lado)
+        if (obstacle_vector[i].second > top || obstacle_vector[i].second < bottom) { // Si no está entre los límites (siempre buscar al mismo lado)
           continue;
         }
         // If it's the NEAREST
-        if ( nearest_obstacle_distance > get_distance_between(actual_position, nearest_obstacle) ) {
+        if ( nearest_obstacle_distance > get_distance_between(actual_position, obstacle_vector[i]) ) {
           nearest_obstacle = obstacle_vector[i];
           nearest_obstacle_distance = get_distance_between(actual_position, obstacle_vector[i]);
           
@@ -216,10 +223,24 @@ class Way {
       }
       
       if (obstacles_in_line) {
-        divide_ways_with_obstacle(nearest_obstacle, actual_position.second, top);
-        divide_ways_with_obstacle(nearest_obstacle, bottom, actual_position.second);
+        if (actual_position.second <= nearest_obstacle.second) {// Si ésta por arriba
+          divide_ways_with_obstacle(nearest_obstacle, nearest_obstacle.second, top);
+          
+          if (!check_obstacle_in_line(actual_position, bottom, nearest_obstacle.second)) { // Miro por abajo también
+              Way way_1 = create_way(actual_position, bottom, nearest_obstacle.second);
+              possible_way_set.insert(way_1);
+          }
+        }
+        else { // Si ésta por abajo
+          divide_ways_with_obstacle(nearest_obstacle, bottom, nearest_obstacle.second);
+          
+          if (!check_obstacle_in_line(actual_position, nearest_obstacle.second, top)) { // Miro por arriba también
+            Way way_2 = create_way(actual_position, nearest_obstacle.second, top);
+            possible_way_set.insert(way_2);
+          }
+        }
       }
-
+      
       return obstacles_in_line;
     }
     
@@ -227,16 +248,21 @@ class Way {
     {
       // Si no hay mas, divido las dos áreas que quedan
       if (!check_obstacle_in_line(actual_position, bottom, top)) {
-        if (actual_position.second <= top && bottom <= actual_position.second) { 
-          create_way(actual_position, actual_position.second, top); 
-          create_way(actual_position, bottom, actual_position.second);
-          return;
+        if (actual_position.second < top && bottom < actual_position.second) { 
+          Way way_1 = create_way(actual_position, actual_position.second, top); 
+          Way way_2 = create_way(actual_position, bottom, actual_position.second);
+          
+          possible_way_set.insert(way_1);
+          possible_way_set.insert(way_2);
+        }
+        else {
+          Way way_1 = create_way(actual_position, bottom, top);
+          possible_way_set.insert(way_1);
         }
       }
-      create_way(actual_position, bottom, top);
     }
     
-    void create_way (Position actual_position, double bottom, double top)
+    Way create_way (Position actual_position, double bottom, double top)
     {
       // Si ya no hay mas hacia el lado que esté yendo calculo esa área
       double diameter = diameter_;
@@ -249,9 +275,7 @@ class Way {
       diameter = get_correct_diameter(diameter, area);
       if (debug) std::cout << "Diameter = " << diameter << "\n";
       
-      Way way (actual_position, diameter, area);
-      
-      possible_way_set.insert(way);
+      return Way (actual_position, diameter, area);
     }
   
 };
@@ -269,18 +293,36 @@ void read_position(const std::string& line, int& x, int& y)
 
 void read_data () 
 {
-  aisle_length = 8; aisle_width = 5;
-  int obstacle_number = 8;
+  std::string line;
+  std::getline(std::cin,line);
   
-  obstacle_vector.resize(obstacle_number);
-  obstacle_vector[0] = Position(2, 1);
-  obstacle_vector[1] = Position(1, 3);
-  obstacle_vector[2] = Position(3, 2);
-  obstacle_vector[3] = Position(4, 4);
-  obstacle_vector[4] = Position(5, 3);
-  obstacle_vector[5] = Position(6, 4);
-  obstacle_vector[6] = Position(7, 2);
-  obstacle_vector[7] = Position(7, 1);
+  read_position(line, aisle_length, aisle_width);
+  
+  if (debug) std::cout << "aisle_length = " << aisle_length << std::endl;
+  if (debug) std::cout << "aisle_width = " << aisle_width << std::endl;
+  
+  if ( (aisle_length < 0) || (aisle_length > 100) ) { throw; }
+  if ( (aisle_width < 0) || (aisle_width > 100) ) { throw; }
+  
+  int obstacle_number = 0; std::cin >> obstacle_number; std::cin.ignore();
+  if (debug) std::cout << "obstacle_number = " << obstacle_number << std::endl;
+  
+  if ( (obstacle_number < 0) || (obstacle_number > 100) ) { throw; }
+  
+  for (int i = 0; i < obstacle_number; i++) {
+    std::getline(std::cin,line);
+    
+    int x, y;
+    read_position(line, x, y);
+    
+    if (debug) std::cout << "x = " << x << std::endl;
+    if (debug) std::cout << "y = " << y << std::endl;
+    
+    if ( (x < 0) || (x > aisle_length) ) { throw; }
+    if ( (y < 0) || (y > aisle_width) ) { throw; }
+    
+    obstacle_vector.push_back(Position(x, y));
+  }
 }
 
 int main () {
