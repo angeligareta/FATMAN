@@ -130,7 +130,6 @@ class Way {
   }
 
   private:
-  
 /**
   * Returns the distance between two position of our way using the euclidian algorithm.
   * @param[in] position_1 First position.
@@ -161,13 +160,15 @@ class Way {
     double nearest_obstacle_y_distance = MAX_INT;
     
     for (int i = 0; i < obstacle_vector.size(); ++i) {
-      if (obstacle_vector[i].first <= actual_position_.first) { continue; }
-      
       // If First see limits
       if (first) {
         if ((obstacle_vector[i].second < area.first) || (obstacle_vector[i].second > area.second)) { continue; }
+        if (obstacle_vector[i].first < actual_position_.first) { continue; }
       }
-      else if ((obstacle_vector[i].second <= area.first) || (obstacle_vector[i].second >= area.second)) { continue; }
+      else {
+        if (obstacle_vector[i].first <= actual_position_.first) { continue; }
+        if ((obstacle_vector[i].second <= area.first) || (obstacle_vector[i].second >= area.second)) { continue; }
+      } 
       
       // Calcular siguiente x en el área.
       if (nearest_obstacle_x >= obstacle_vector[i].first) { // Busco 'x' mas cerca y si son iguales buscara la 'y' mas cercana
@@ -193,15 +194,19 @@ class Way {
   * @param[in] area Pair of the top and bottom where we want to search the obstacle.
   * @return last_obstacle_position Last obstacle position.
   */
-  Position get_last_obstacle(const Position& actual_position, const Area& area) const
+  Position get_last_obstacle(const Position& actual_position, const Area& area, const std::vector<Position>& last_obstacle_vector) const
   {
     Position last_obstacle_position = Position(-1, -1);
     int nearest_obstacle_x = -1;
     double nearest_obstacle_y_distance = MAX_INT;
     
     for (int i = 0; i < obstacle_vector.size(); ++i) {
-      if (obstacle_vector[i].first >= actual_position.first) { continue; }
-      if ( (obstacle_vector[i].second < area.first) || (obstacle_vector[i].second > area.second) ) { continue; }
+      if (obstacle_vector[i] == actual_position) { continue; }
+      if (obstacle_vector[i].first > actual_position.first) { continue; }
+      
+      // If it has to go up or down to change area, see if it touch obstacle
+      if ((obstacle_vector[i].second < area.first) || (obstacle_vector[i].second > area.second)) { continue; }
+      if (std::count (last_obstacle_vector.begin(), last_obstacle_vector.end(), obstacle_vector[i]) != 0) { continue; }
       
       // Calcular siguiente x en el área.
       if (nearest_obstacle_x <= obstacle_vector[i].first) { // Busco 'x' mas cerca y si son iguales buscara la 'y' mas cercana
@@ -227,17 +232,20 @@ class Way {
   double get_correct_diameter(const Position& actual_position, const double& diameter, const Area& area) const
   {
     double correct_diameter = diameter;
-    Position last_obstacle_position = get_last_obstacle(actual_position, area);
+    std::vector<Position> last_obstacle_vector;
+    Position last_obstacle_position = get_last_obstacle(actual_position, area, last_obstacle_vector);
     
+    // TODO: Can be optimized if we stop looking afer a distance...
     while (last_obstacle_position != Position(-1, -1)) {
-
+      
       double distance_to_obstacle = get_distance_between(actual_position, last_obstacle_position);
       
       if (distance_to_obstacle < correct_diameter) {
         correct_diameter = distance_to_obstacle;
       }
       
-      last_obstacle_position = get_last_obstacle(last_obstacle_position, area);
+      last_obstacle_vector.push_back(last_obstacle_position); // Marked
+      last_obstacle_position = get_last_obstacle(actual_position, area, last_obstacle_vector);
     }
     
     return correct_diameter;
@@ -255,8 +263,19 @@ class Way {
   {
     double diameter = diameter_;
     if ( diameter > top - bottom) { diameter = top - bottom; }
+    
     Area area = Area(bottom, top);
+    
     diameter = get_correct_diameter(actual_position, diameter, area);
+    
+    // Calculate area depending on the diameter
+    if (actual_position.second == bottom) { // If the area is above the actual_position
+      area = Area(bottom, bottom + diameter);
+    }
+    else if (actual_position.second == top) { // If the area is under the actual_position
+      area = Area(top - diameter, top);
+    }
+    
     return Way (actual_position, diameter, area);
   }
 
@@ -285,7 +304,7 @@ class Way {
   * Check if there are more obstacles between the botom and the top of the current position. 
   *   - First it check the obstacle as this method is recursive for preventing an infinite loop.
   *   - Second it get's the nearest obstacle that is in line, marked and in the area.
-  *   - If there have been obstacles we look if it's above our position or under it and call divide_ways_with_obstacle(). This is neccesary
+  *   - If there have been obstacles we look if it's above our position or under it and call check_obstacle_in_line(). This is neccesary
   *     because the algorithm is recursive.
   * @param[in] actual_position Actual position of the way (the obstacle where it is).
   * @param[in] bottom Bottom limit for searching the obstacle.
@@ -339,35 +358,6 @@ class Way {
     
     return obstacles_in_line;
   }
-
-/**
-  * Special method to divide ways if an obstacle was found. We call check_obstacle_in_line() to discover if there are new obstacles.
-  *   - If there are more obstacles the recursive method will keep the search for new obstacles until there are no more. 
-  *     Once the search has finished the method how to divide the way depending if there were two areas of one. If there was only
-  *     one area it means that the height of the actual_positiion is between botom and top (Without touching). If it touchs it mean
-  *     that there is only one area.
-  *   - Finally we create the ways for the areas found.
-  * @param[in] actual_position Actual position of the way (the obstacle where it is).
-  * @param[in] bottom Bottom limit for searching the obstacle.
-  * @param[in] top Top limit for searching the obstacle.
-  * @return variableA Description.
-  */  
-  void divide_ways_with_obstacle (const Position& actual_position, const double& bottom, const double& top)
-  {
-    if (!check_obstacle_in_line(actual_position, bottom, top)) { // If there are no more divide 2 areas
-      if ((actual_position.second < top) && (bottom < actual_position.second)) { 
-        Way way_1 = create_way(actual_position, actual_position.second, top); 
-        Way way_2 = create_way(actual_position, bottom, actual_position.second);
-        
-        possible_way_set.insert(way_1);
-        possible_way_set.insert(way_2);
-      }
-      else {
-        Way way_1 = create_way(actual_position, bottom, top);
-        possible_way_set.insert(way_1);
-      }
-    }
-  }
 };
 
 /** 
@@ -409,21 +399,22 @@ void read_data ()
   
   if ( (obstacle_number < 0) || (obstacle_number > 100) ) { throw std::runtime_error(""); }
   
-  for (int i = 0; i < obstacle_number; i++) {
-    std::getline(std::cin,line);
-    
-    int x, y;
-    try { read_position(line, x, y); }
-    catch (...) { throw; }
-    
-    if ( (x < 0) || (x > aisle_length) ) { throw std::runtime_error(""); }
-    if ( (y < 0) || (y > aisle_width) ) { throw std::runtime_error(""); }
-    
-    obstacle_vector.push_back(Position(x, y));
+  if (obstacle_number != 0) {
+    for (int i = 0; i < obstacle_number; i++) {
+      std::getline(std::cin,line);
+      
+      int x, y;
+      try { read_position(line, x, y); }
+      catch (...) { throw; }
+      
+      if ( (x < 0) || (x > aisle_length) ) { throw std::runtime_error(""); }
+      if ( (y < 0) || (y > aisle_width) ) { throw std::runtime_error(""); }
+      
+      obstacle_vector.push_back(Position(x, y));
+    }
+    std::sort(obstacle_vector.begin(), obstacle_vector.begin());
+    std::unique (obstacle_vector.begin(), obstacle_vector.end(), equal);
   }
-  
-  std::sort(obstacle_vector.begin(), obstacle_vector.begin());
-  std::unique (obstacle_vector.begin(), obstacle_vector.end(), equal);
 }
 
 int main () {
@@ -465,7 +456,7 @@ int main () {
     }
     
     // Take the finished way with maximum diameter
-    diameter = (*finished_way_set.rbegin()).get_diameter(); 
+    diameter = (finished_way_set.empty()) ? 0 : (*finished_way_set.rbegin()).get_diameter();
     
     //Round diameter to 4 decimals
     solution_vector[i] = round(diameter * 10000) / 10000;
