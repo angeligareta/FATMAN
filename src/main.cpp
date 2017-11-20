@@ -128,6 +128,11 @@ class Way {
   {
     return diameter_;
   }
+  
+  void set_diameter (const double& diameter)
+  {
+    diameter_ = diameter;
+  }
 
   private:
 /**
@@ -138,8 +143,8 @@ class Way {
   */
   double get_distance_between(const Position& position_1, const Position& position_2) const
   {
-    int x_distance_to_obstacle = abs(position_1.first - position_2.first);
-    int y_distance_to_obstacle = abs(position_1.second - position_2.second);
+    double x_distance_to_obstacle = abs(position_1.first - position_2.first);
+    double y_distance_to_obstacle = abs(position_1.second - position_2.second);
     return sqrt(x_distance_to_obstacle*x_distance_to_obstacle + y_distance_to_obstacle*y_distance_to_obstacle);
   }
 
@@ -166,8 +171,8 @@ class Way {
         if (obstacle_vector[i].first < actual_position_.first) { continue; }
       }
       else {
+        if ((obstacle_vector[i].second < area.first) || (obstacle_vector[i].second > area.second)) { continue; }
         if (obstacle_vector[i].first <= actual_position_.first) { continue; }
-        if ((obstacle_vector[i].second <= area.first) || (obstacle_vector[i].second >= area.second)) { continue; }
       } 
       
       // Calcular siguiente x en el área.
@@ -194,27 +199,30 @@ class Way {
   * @param[in] area Pair of the top and bottom where we want to search the obstacle.
   * @return last_obstacle_position Last obstacle position.
   */
-  Position get_last_obstacle(const Position& actual_position, const Area& area, const std::vector<Position>& last_obstacle_vector) const
+  Position get_last_obstacle(const std::vector<Position>& last_obstacle_vector, bool look_on_line = false) const
   {
     Position last_obstacle_position = Position(-1, -1);
     int nearest_obstacle_x = -1;
     double nearest_obstacle_y_distance = MAX_INT;
     
     for (int i = 0; i < obstacle_vector.size(); ++i) {
-      if (obstacle_vector[i] == actual_position) { continue; }
-      if (obstacle_vector[i].first > actual_position.first) { continue; }
-      
-      // If it has to go up or down to change area, see if it touch obstacle
-      if ((obstacle_vector[i].second < area.first) || (obstacle_vector[i].second > area.second)) { continue; }
+      if ((obstacle_vector[i] == actual_position_) || (obstacle_vector[i].first >= actual_position_.first)) { continue; }
       if (std::count (last_obstacle_vector.begin(), last_obstacle_vector.end(), obstacle_vector[i]) != 0) { continue; }
+      
+      if (look_on_line) {
+        if ((obstacle_vector[i].second < area_.first) || (obstacle_vector[i].second > area_.second)) { continue; }
+      }
+      else { 
+        if ((obstacle_vector[i].second <= area_.first) || (obstacle_vector[i].second >= area_.second)) { continue; }
+      }
       
       // Calcular siguiente x en el área.
       if (nearest_obstacle_x <= obstacle_vector[i].first) { // Busco 'x' mas cerca y si son iguales buscara la 'y' mas cercana
         nearest_obstacle_x = obstacle_vector[i].first;
         if ((last_obstacle_position.first != obstacle_vector[i].first) || 
-            (nearest_obstacle_y_distance > abs(actual_position.second - obstacle_vector[i].second))) {
+            (nearest_obstacle_y_distance > abs(actual_position_.second - obstacle_vector[i].second))) {
           last_obstacle_position = obstacle_vector[i];
-          nearest_obstacle_y_distance = abs(actual_position.second - obstacle_vector[i].second);
+          nearest_obstacle_y_distance = abs(actual_position_.second - obstacle_vector[i].second);
         }
       }
     }
@@ -229,26 +237,39 @@ class Way {
   * @param[in] area Area that we are analyzing in that way.
   * @return correct_diameter Diameter adjusted if neccesary.
   */
-  double get_correct_diameter(const Position& actual_position, const double& diameter, const Area& area) const
+  double get_correct_diameter(bool area_changed) const
   {
-    double correct_diameter = diameter;
+    double correct_diameter = diameter_;
     std::vector<Position> last_obstacle_vector;
-    Position last_obstacle_position = get_last_obstacle(actual_position, area, last_obstacle_vector);
     
-    // TODO: Can be optimized if we stop looking afer a distance...
+    // 1º Adjust to limits
+    if ( correct_diameter > (area_.second - area_.first)) { correct_diameter = area_.second - area_.first; }
+    
+    // 2º Adjust to distance and if area changed
+    // TODO: Can be optimized if we stop looking afer a distance... Order obstacles by distance?
+    Position last_obstacle_position = get_last_obstacle(last_obstacle_vector, area_changed);
+    
     while (last_obstacle_position != Position(-1, -1)) {
+      double distance_to_obstacle = get_distance_between(actual_position_, last_obstacle_position);
       
-      double distance_to_obstacle = get_distance_between(actual_position, last_obstacle_position);
-      
-      if (distance_to_obstacle < correct_diameter) {
-        correct_diameter = distance_to_obstacle;
-      }
+      if (distance_to_obstacle < correct_diameter) { correct_diameter = distance_to_obstacle; }
       
       last_obstacle_vector.push_back(last_obstacle_position); // Marked
-      last_obstacle_position = get_last_obstacle(actual_position, area, last_obstacle_vector);
+      last_obstacle_position = get_last_obstacle(last_obstacle_vector, area_changed);
     }
     
     return correct_diameter;
+  }
+  
+  void adjust_area ()
+  {
+    //Optimization: Recalculate area depending on the diameter
+    if (actual_position_.second == area_.first) { // If the area is above the actual_position
+      area_ = Area(area_.first, area_.first + diameter_);
+    }
+    else if (actual_position_.second == area_.second) { // If the area is under the actual_position
+      area_ = Area(area_.second - diameter_, area_.second);
+    }  
   }
   
 /**
@@ -259,24 +280,25 @@ class Way {
   * @param[in] top Top limit for searching the obstacle.
   * @return Way The created way.
   */  
-  Way create_way (const Position& actual_position, const double& bottom, const double& top) const
+  Way create_way (const Position& actual_position, const double& bottom, const double& top)
   {
-    double diameter = diameter_;
-    if ( diameter > top - bottom) { diameter = top - bottom; }
+    bool area_changed = false;
     
-    Area area = Area(bottom, top);
-    
-    diameter = get_correct_diameter(actual_position, diameter, area);
-    
-    // Calculate area depending on the diameter
-    if (actual_position.second == bottom) { // If the area is above the actual_position
-      area = Area(bottom, bottom + diameter);
-    }
-    else if (actual_position.second == top) { // If the area is under the actual_position
-      area = Area(top - diameter, top);
+    //If it changes from bottom to top or viceversa, it means it has changed of area, we adjust to the nearest in line.
+    // if ((area_.second == bottom) || (area_.first == top)) {
+    //  
+    // }
+    if ((area_.second == bottom) || (area_.first == top)) {
+      area_changed = true;
     }
     
-    return Way (actual_position, diameter, area);
+    Way way = Way (actual_position, diameter_, Area(bottom, top));
+    way.set_diameter(way.get_correct_diameter(area_changed));
+    way.adjust_area();
+    
+    if (area_changed) { diameter_ = way.diameter_; }
+  
+    return way;
   }
 
 /**
@@ -286,17 +308,27 @@ class Way {
   */  
   void divide_ways ()
   {
+    // Only if there are not more obstacles, insert in possible way. If there are, it would insert them.
+    double diameter_backup = diameter_; // If the diameter changes, recover the last one.
+    
     // Look up
-    if ((actual_position_.second != aisle_width) &&
-    (!check_obstacle_in_line(actual_position_, actual_position_.second, aisle_width)) ) {
-      Way way_1 = create_way(actual_position_, actual_position_.second, aisle_width);
-      possible_way_set.insert(way_1);
+    if (actual_position_.second != aisle_width) {
+      double top = actual_position_.second + diameter_;
+      if (top > aisle_width) { top = aisle_width; }
+          
+      Way way = create_way(actual_position_, actual_position_.second, top);
+      if (!way.check_obstacle_in_line()) { possible_way_set.insert(way); }
     }
+    
+    diameter_ = diameter_backup;
+    
     // Look down
-    if ((actual_position_.second != 0) &&
-      (!check_obstacle_in_line(actual_position_, 0, actual_position_.second)) ) {
-      Way way_2 = create_way(actual_position_, 0, actual_position_.second);
-      possible_way_set.insert(way_2);
+    if (actual_position_.second != 0) {
+      double bottom = actual_position_.second - diameter_;
+      if (bottom < 0) { bottom = 0; }
+          
+      Way way = create_way(actual_position_, bottom, actual_position_.second);
+      if (!way.check_obstacle_in_line()) { possible_way_set.insert(way); }
     }
   }
 
@@ -311,47 +343,52 @@ class Way {
   * @param[in] top Top limit for searching the obstacle.
   * @return obstacles_in_line Bool that indicates if the method found obstacles between botom and top of that line.
   */  
-  bool check_obstacle_in_line(const Position& actual_position, const double& bottom, const double& top)
+  bool check_obstacle_in_line()
   {
     bool obstacles_in_line = false;
+    checked_obstacles.push_back(actual_position_);
+    
     Position nearest_obstacle;
     int nearest_obstacle_distance = MAX_INT;
     
-    checked_obstacles.push_back(actual_position);
-    
+    // Get nearest obstacle in line
     for (int i = 0; i < obstacle_vector.size(); ++i) {
-      if ( (obstacle_vector[i] == actual_position) || (obstacle_vector[i].first != actual_position.first) ) { continue; }
+      if ((obstacle_vector[i] == actual_position_) || (obstacle_vector[i].first != actual_position_.first)) { continue; }
       if (std::count (checked_obstacles.begin(), checked_obstacles.end(), obstacle_vector[i]) != 0) { continue; }
-      if (obstacle_vector[i].second > top || obstacle_vector[i].second < bottom) {continue; }
+      if (obstacle_vector[i].second > area_.second || obstacle_vector[i].second < area_.first) {continue; }
       
-      if ( nearest_obstacle_distance > get_distance_between(actual_position, obstacle_vector[i]) ) {
+      if (nearest_obstacle_distance > get_distance_between(actual_position_, obstacle_vector[i])) {
         nearest_obstacle = obstacle_vector[i];
-        nearest_obstacle_distance = get_distance_between(actual_position, obstacle_vector[i]);
+        nearest_obstacle_distance = get_distance_between(actual_position_, obstacle_vector[i]);
         obstacles_in_line = true;
       }
     }
     
     if (obstacles_in_line) {
-      if (actual_position.second <= nearest_obstacle.second) {  // Look up
+      if (actual_position_.second <= nearest_obstacle.second) {  // Look up
         // Create way between obstacles
-        Way way_1 = create_way(actual_position, actual_position.second, nearest_obstacle.second);
+        Way way_1 = create_way(actual_position_, actual_position_.second, nearest_obstacle.second);
         possible_way_set.insert(way_1);
       
-        if ((nearest_obstacle.second != aisle_width) &&
-        !check_obstacle_in_line(nearest_obstacle, nearest_obstacle.second, top)) {
+        if (nearest_obstacle.second != aisle_width) {
+          double top = nearest_obstacle.second + diameter_;
+          if (top > aisle_width) { top = aisle_width; }
+          
           Way way_2 = create_way(nearest_obstacle, nearest_obstacle.second, top);
-          possible_way_set.insert(way_2);    
+          if (!way_2.check_obstacle_in_line()) { possible_way_set.insert(way_2); }
         }
       }
       else { // Look down
         // Create way between obstacles
-        Way way_1 = create_way(actual_position, nearest_obstacle.second, actual_position.second);
+        Way way_1 = create_way(actual_position_, nearest_obstacle.second, actual_position_.second);
         possible_way_set.insert(way_1);
         
-        if ((nearest_obstacle.second != 0) &&
-        !check_obstacle_in_line(nearest_obstacle, bottom, nearest_obstacle.second)) {
+        if (nearest_obstacle.second != 0) {
+          double bottom = nearest_obstacle.second - diameter_;
+          if (bottom < 0) { bottom = 0; }
+          
           Way way_2 = create_way(nearest_obstacle, bottom, nearest_obstacle.second);
-          possible_way_set.insert(way_2);  
+          if (!way_2.check_obstacle_in_line()) { possible_way_set.insert(way_2); } 
         }
       }
     }

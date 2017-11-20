@@ -12,9 +12,9 @@ const string FILENAME = "./test/data.txt";
 int main ()
 {
    const int test_number = 75;
-   const int max_obstacle_number = 15;
-   const int max_aisle_length = 11;
-   const int max_aisle_width = 11;
+   const int max_obstacle_number = 16;
+   const int max_aisle_length = 16;
+   const int max_aisle_width = 16;
    
    srand (time(NULL));
    
