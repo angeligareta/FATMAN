@@ -11,6 +11,8 @@
 #include <cmath> //sqrt
 #include <algorithm> //count
 
+#include <ctime>
+
 using Position = std::pair<int,int>; /**< Pair of int used to store the x and y of a position. */
 using Area = std::pair<double,double>; /**< Pair of double used to store the bottom and top of the area in a way. */
 class Way;
@@ -460,6 +462,9 @@ int main () {
   
   std::vector<double> solution_vector(test_number);
   
+  const clock_t begin_time = clock();
+  // do something
+  
   for (int i = 0; i < test_number; i++) {
     // Clear the vectors before using
     obstacle_vector.clear();
@@ -503,4 +508,9 @@ int main () {
   for (int i = 0; i < test_number; i++) {
     std::cout << "Maximum size in test case " << i+1 << " is " << std::setprecision(4) << std::fixed << solution_vector[i] << ".\n";
   }
+  
+  // Runtime
+  // double elapsed_time = float(clock () - begin_time) /  CLOCKS_PER_SEC;
+  // std::cout << "Average Runtime per test: " << (elapsed_time / test_number)  << ".\n";
+  // std::cout << "Total Runtime: " << elapsed_time << ".\n";
 }
