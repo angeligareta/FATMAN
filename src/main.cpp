@@ -42,6 +42,7 @@ class Way {
   
   private:
   Position actual_position_; /**< Actual position of the way (the obstacle where it is). */
+  Position last_position_;
   double diameter_; /**< Diameter of the fat person if we use this way. */
   Area area_; /**< Area that we are analyzing in that way. There will be a way for any different area. */
   std::vector<Position> checked_obstacles; /**< Obstacles that we have seen (used in @see check_obstacle_in_line()).*/
@@ -110,6 +111,7 @@ class Way {
   */
   void get_next_ways ()
   {
+    last_position_ = actual_position_;
     actual_position_ = get_next_obstacle(area_);
     
     if (actual_position_ == Position(-1,-1)) { 
@@ -284,13 +286,14 @@ class Way {
   {
     bool area_changed = false;
     
-    //If it changes from bottom to top or viceversa, it means it has changed of area, we adjust to the nearest in line.
-    // if ((area_.second == bottom) || (area_.first == top)) {
-    //  
-    // }
+    // If it changes from bottom to top or viceversa, it means it has changed of area, we adjust to the nearest in line.
+    // Error in detecting Area not solved.
     if ((area_.second == bottom) || (area_.first == top)) {
       area_changed = true;
     }
+    // if ((last_position_.second > top) || (last_position_.second < bottom)) {
+    //   area_changed = true;
+    // }
     
     Way way = Way (actual_position, diameter_, Area(bottom, top));
     way.set_diameter(way.get_correct_diameter(area_changed));
@@ -310,13 +313,11 @@ class Way {
   {
     // Only if there are not more obstacles, insert in possible way. If there are, it would insert them.
     double diameter_backup = diameter_; // If the diameter changes, recover the last one.
+    double top = aisle_width, bottom = 0;
     
     // Look up
     if (actual_position_.second != aisle_width) {
-      double top = actual_position_.second + diameter_;
-      if (top > aisle_width) { top = aisle_width; }
-          
-      Way way = create_way(actual_position_, actual_position_.second, top);
+      Way way = create_way(actual_position_, actual_position_.second, aisle_width);
       if (!way.check_obstacle_in_line()) { possible_way_set.insert(way); }
     }
     
@@ -324,10 +325,7 @@ class Way {
     
     // Look down
     if (actual_position_.second != 0) {
-      double bottom = actual_position_.second - diameter_;
-      if (bottom < 0) { bottom = 0; }
-          
-      Way way = create_way(actual_position_, bottom, actual_position_.second);
+      Way way = create_way(actual_position_, 0, actual_position_.second);
       if (!way.check_obstacle_in_line()) { possible_way_set.insert(way); }
     }
   }
