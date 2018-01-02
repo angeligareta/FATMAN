@@ -1,37 +1,105 @@
-## Nombre y número del problema a Resolver: 
-   * [Fatman - Problem number 295](https://uva.onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&page=show_problem&category=4&problem=231&mosmsg=Submission+received+with+ID+20346844)
+# FATMAN
 
-## Miembro del Equipo:
-   * Ángel Igareta (alu0100967111@ull.edu.es) **Coordinator**
+## Description 
+The aim of this project is to solve a training problem of the ACM-ICPC International Collegiate Programming Contest, annual competition between universities
+around the world sponsored by IBM. The problem is the number 295 and is called 
+[Fatman](https://uva.onlinejudge.org/index.php?option=com_onlinejudge&Itemid=8&page=show_problem&category=4&problem=231&mosmsg=Submission+received+with+ID+20346844)
 
-La estructura de directorios de la que se parte es la siguiente:
+It was chosen to study shortest path algorithms deeply. At the end the problem couldn't be solved but the optimum algorithm was found to solve it and it could
+solve 65 of 75 problems, in average.
 
+This is the problem number 295:
+
+### Introduction
+```
+Some of us may be so fortunate to be thin enough to squeeze through the tiniest hole, others are not.
+Getting from A to B in a crowded supermarket (even without a cart) can be tough and may require
+sophisticated navigation: there may seem to be enough room on the one side, but then you may run
+into trouble with that lady further down...
+
+Let’s consider this in an abstract fashion: given an aisle of a certain width, with infinitely small
+obstacles scattered around, just how fat can a person be and still be able to get from the left side
+to the right side. Assume that seen from above a (fat) person looks like a circle and the person is
+incompressible (a person with diameter d cannot go between two obstacles having distance less than
+d).
+```
+### Input
+```
+The first line of input specifies the number of test cases your program has to process. The input for
+each test case consists of the following lines:
+
+* One line with the integer length L (0  L  100) and integer width W (0  W  100) of the
+aisle, separated by a single space.
+* One line with the number of obstacles N (0  N  100) in the aisle.
+* N lines, one for each obstacle, with its integer coordinates X and Y (0  X  L, 0  Y  W)
+separated by a single space.
+```
+
+### Output
+```
+For each test case given in the input, print a line saying ‘Maximum size in test case N is M.’,
+where M is rounded to the nearest fractional part of exactly four digits. M is the maximum diameter
+of a person that can get through the aisle specified for that test case. N is the current test case number,
+starting at one.
+```
+
+### Example
+![Example Solution](docs/img/solution-example.png)
+
+## Algorithm
+For solving the problem I decided to follow this steps:
+1.  Start in the first obstacle that we find from A. Create a way with the position of that obstacle, with area the limits of the supermarket and
+with diameter the maximum width that a person can have in the case that there were not obstacles.
+2.  Create a set of possible ways and other of finished ways. After that we loop while the way with the maximum diameter in the finished ways set 
+is not greater than the way with maximum diameter in the possible ways set, because that will mean there could be a better way.
+![Loop](docs/img/Loop.png)
+3. For each possible way:
+* From the position we are and only seeing the area in the way, we move to the next obstacle. First prioritizing the distance in the x axis and then in the y axis.
+* From that obstacle we divide the way in two new ones, one from the obstacle to the highest limit in the area and other to the lowest limit. This way we discover
+all the possible ways that we can follow to reach the aim, depending where we start and where we have moved.
+
+![DivideFunction](docs/img/DivideFunction.png)
+* In case of being more obstacles up or down in the same x axis that the actual obstacle, we will create a way for each possible way between each obstacle.
+* Finally we will have to adjust the diameter of that way, seeing if the actual diameter is limited by the area width or by the distance of any last obstacle.
+We choose the more restrictive one.
+
+![DiameterFunction](docs/img/DiameterFunction.png)
+4. We finish when the maximum diameter of the finished ways is greater than all the possible ways, this will mean we have found the optimum solution.
+
+### Problems solved
+The algorithm implemented could solve 64 of 75 problems.
+
+![TestsScreenshot](docs/img/TestsScreenshot.png)
+
+And the time was:
+![TestsTimeScreenshot](docs/img/TestsTimeScreenshot.png)
+
+### Possible Problem
+The possible problem that has to be solved to find the perfect implementation is the change of area, I couldn't find a way to detect the change of area correctly.
+
+## Poster
+![Poster](docs/img/Poster.png)
+
+## Project Structure
 ```
 .
-├── docs  # Documentación del proyecto
+├── docs  # Project Documentation
 │   │
-│   └── Ficheros html, png, css...
+│   └── Files html, png, css...
 │
-├── src   # Código fuente del proyecto
+├── src   # Project Source
 │   │
 │   ├── main.cpp
-│   └── README.md
+│   └── Test
+│       └── test_generator.cpp
 │
-├── test  # Pruebas
-│   └── README.md
+├── test  # Tests
+│   └── data.txt
 │    
 └── README.md
 ```
 
-## Informe del trabajo realizado: (PENDING)
-
-1.- Descripción del problema
-2.- Tiempo de resolución en la base de datos 
-3.- Descripción de la implementación propuesta
-4.- Tiempo de la implementación propuesta 
-
-
-## Grafo de confirmaciones:
+## Commit Graph
 
 ```
 commit c876f4808bf6a1d5df84f535bc025c9621af2e11
@@ -44,7 +112,7 @@ commit b9078a5118a65ea4ac1400dcb657918e229c3ea7
 Author: Angel Igareta <alu0100967111@ull.edu.es>
 Date:   Wed Nov 15 01:18:54 2017 +0000
 
-    Improved excepction handler
+    Improved exception handler
 
 commit 0fe7716461cf22793e6bfc7e725607f8335ea666
 Author: Angel Igareta <alu0100967111@ull.edu.es>
@@ -118,3 +186,6 @@ Date:   Tue Oct 10 12:11:33 2017 +0100
 
     Creando la estructura
 ```
+
+## Author
+   * [Ángel Igareta](https://github.com/angeligareta) **Coordinator**
