@@ -1,5 +1,19 @@
 # FATMAN
 
+## Index
+* [Description](#description)
+  * [Introduction](#introduction)
+  * [Input](#input)
+  * [Output](#output)
+  * [Solution Example](#solution-example)
+* [Algorithm](#algorithm)
+  * [Problems Solved](#problems-solved)
+  * [Possible Problem](#possible-problem)
+* [Poster](#poster)
+* [Project Structure](#project-structure)
+* [Commit Graph](#commit-graph)
+* [Author](#author)
+
 ## Description 
 The aim of this project is to solve a training problem of the ACM-ICPC International Collegiate Programming Contest, annual competition between universities
 around the world sponsored by IBM. The problem is the number 295 and is called 
@@ -43,8 +57,8 @@ of a person that can get through the aisle specified for that test case. N is th
 starting at one.
 ```
 
-### Example
-![Example Solution](docs/img/solution-example.png)
+### Solution Example
+![Solution Example](docs/img/solution-example.png)
 
 ## Algorithm
 For solving the problem I decided to follow this steps:
